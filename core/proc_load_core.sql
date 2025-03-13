@@ -5,8 +5,8 @@ Stored Procedure: Load Core Layer (staging -> core)
 Script Purpose:
     This stored procedure loads data into the 'core' schema from 'staging' schema. 
     It performs the following actions:
-    - Truncates the staging tables before loading data.
-    - Load data from foreign tables to staging tables.
+    - Truncates the core tables before loading data.
+    - Load data from staging tables to core tables.
 ===============================================================================
 */
 
