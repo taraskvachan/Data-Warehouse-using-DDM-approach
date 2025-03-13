@@ -76,17 +76,17 @@ BEGIN
     JOIN
     	staging.address a USING(address_id)
     JOIN
-    	staging.city c USING(city_id);	
+    	staging.city c USING(city_id);
 
     -- Load core.dim_date
 
     RAISE NOTICE '>> Truncating Table: core.dim_date';
-    TRUNCATE TABLE core.dim_date;
+    DELETE FROM  core.dim_date;
     
     RAISE NOTICE '>> Inserting Data Into: core.dim_date';
     INSERT INTO core.dim_date 
     SELECT TO_CHAR(datum, 'yyyymmdd')::INT AS date_dim_id,
-    	datum AS date_actual,
+       	datum AS date_actual,
         EXTRACT(EPOCH FROM datum) AS epoch,
         TO_CHAR(datum, 'fmDDth') AS day_suffix,
         TO_CHAR(datum, 'TMDay') AS day_name,
@@ -126,7 +126,7 @@ BEGIN
         FROM GENERATE_SERIES(0, nm - 1) AS SEQUENCE (DAY)
         GROUP BY SEQUENCE.DAY) DQ
     ORDER BY 1;
-
+		
     -- Load core.fact_payment
 
     RAISE NOTICE '>> Truncating Table: core.fact_payment';
@@ -136,14 +136,14 @@ BEGIN
     INSERT INTO core.fact_payment (
 	payment_id,
 	amount, 
-        payment_date, 
+	payment_date_fk, 
 	inventory_fk, 
 	staff_fk
     )
     SELECT
 	p.payment_id,
 	p.amount,
-	p.payment_date::DATE AS payment_date,
+	dd.date_dim_pk AS payment_date_fk,
 	di.inventory_pk AS inventory_fk,
 	ds.staff_pk AS staff_fk
     FROM
@@ -153,7 +153,9 @@ BEGIN
     JOIN
     	core.dim_inventory di USING(inventory_id)
     JOIN
-    	core.dim_staff ds ON p.staff_id = ds.staff_id;
+    	core.dim_staff ds ON p.staff_id = ds.staff_id
+    JOIN
+    	core.dim_date dd ON dd.date_actual = p.payment_date::DATE;
 
     -- Load core.fact_rental
 
@@ -165,8 +167,8 @@ BEGIN
 	rental_id,
 	inventory_fk,
 	staff_fk,
-	rental_date,
-        return_date,
+	rental_date_fk,
+	return_date_fk,
 	amount,
 	cnt
     )
@@ -174,8 +176,8 @@ BEGIN
 	r.rental_id,
 	i.inventory_pk AS inventory_fk,
 	s.staff_pk AS staff_fk,
-	r.rental_date::DATE AS rental_date,
-	r.return_date::DATE AS return_date,
+	dd_rental.date_dim_pk AS rental_date_fk,
+	dd_return.date_dim_pk AS return_date_fk,
 	SUM(p.amount) AS amount,
 	COUNT(*) AS cnt
     FROM
@@ -184,14 +186,18 @@ BEGIN
 	core.dim_inventory i USING(inventory_id)
     JOIN 
 	core.dim_staff s ON s.staff_id = r.staff_id
+    left JOIN 
+	core.dim_date dd_rental ON dd_rental.date_actual = r.rental_date::date
     LEFT JOIN
 	staging.payment p USING(rental_id)
+    LEFT JOIN
+	core.dim_date dd_return ON dd_return.date_actual = r.return_date::DATE
     GROUP BY
 	r.rental_id,
 	i.inventory_pk,
 	s.staff_pk,
-	r.rental_date::DATE,
-	r.return_date::DATE;
+	dd_rental.date_dim_pk,
+	dd_return.date_dim_pk;
 
     RAISE NOTICE '==========================================';
     RAISE NOTICE 'Loading Core Layer is Completed';
@@ -206,15 +212,6 @@ EXCEPTION
 END;
 $$;
 
-
-/*
-===============================================================================
-Stored Procedure: Truncate Fact Tables 
-===============================================================================
-Script Purpose:
-    This stored procedure truncate fact Tables 
-===============================================================================
-*/
 
 CREATE OR REPLACE PROCEDURE core.truncate_fact_tables()
 LANGUAGE plpgsql
@@ -250,15 +247,13 @@ begin
     RAISE NOTICE '================================================';
 	
     CALL core.truncate_fact_tables();
-    CALL core.load_core('2007-01-01'::DATE, 5844);
+    CALL core.load_core('2005-01-01'::DATE, 7844);
 
     RAISE NOTICE '==========================================';
     RAISE NOTICE 'FULL CORE LAYER LOADING is Completed';
     RAISE NOTICE '==========================================';
-
 END;
 $$;
-
 
 CALL core.full_load();
 
