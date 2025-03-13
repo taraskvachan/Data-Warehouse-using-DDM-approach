@@ -53,3 +53,41 @@ create table core.fact_rental (
 	cnt int2 not null,
 	amount numeric(7, 2)
 );
+
+DROP TABLE if exists core.dim_date;
+CREATE TABLE core.dim_date
+(
+  date_dim_pk              INT PRIMARY KEY,
+  date_actual              DATE NOT NULL,
+  epoch                    BIGINT NOT NULL,
+  day_suffix               VARCHAR(4) NOT NULL,
+  day_name                 VARCHAR(9) NOT NULL,
+  day_of_week              INT NOT NULL,
+  day_of_month             INT NOT NULL,
+  day_of_quarter           INT NOT NULL,
+  day_of_year              INT NOT NULL,
+  week_of_month            INT NOT NULL,
+  week_of_year             INT NOT NULL,
+  week_of_year_iso         CHAR(10) NOT NULL,
+  month_actual             INT NOT NULL,
+  month_name               VARCHAR(9) NOT NULL,
+  month_name_abbreviated   CHAR(3) NOT NULL,
+  quarter_actual           INT NOT NULL,
+  quarter_name             VARCHAR(9) NOT NULL,
+  year_actual              INT NOT NULL,
+  first_day_of_week        DATE NOT NULL,
+  last_day_of_week         DATE NOT NULL,
+  first_day_of_month       DATE NOT NULL,
+  last_day_of_month        DATE NOT NULL,
+  first_day_of_quarter     DATE NOT NULL,
+  last_day_of_quarter      DATE NOT NULL,
+  first_day_of_year        DATE NOT NULL,
+  last_day_of_year         DATE NOT NULL,
+  mmyyyy                   CHAR(6) NOT NULL,
+  mmddyyyy                 CHAR(10) NOT NULL,
+  weekend_indr             BOOLEAN NOT NULL
+);
+
+CREATE INDEX dim_date_date_actual_idx
+  ON core.dim_date(date_actual);
+
