@@ -11,9 +11,15 @@ Script Purpose:
 
 
 DROP TABLE IF EXISTS report.sales_by_dates;
-create table report.sales_by_dates (
+CREATE TABLE report.sales_by_dates (
 	date_title varchar(20) not null,
 	amount numeric(7,2) not null,
 	date_Sort int not null
+);
+
+DROP TABLE IF EXISTS report.sales_film;
+CREATE TABLE report.sales_film (
+	film_title varchar(255) not null,
+	amount numeric(7,2) not null 
 );
 
