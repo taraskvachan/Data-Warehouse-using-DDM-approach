@@ -18,23 +18,23 @@ BEGIN
 	TRUNCATE TABLE report.sales_film;
 
 	RAISE NOTICE '>> Inserting Data Into: report.sales_film';
-		INSERT INTO report.sales_film
-		(
-			film_title, 
-			amount
-		)
-		select
-			di.title as film_title,
-			sum(p.amount) as amout
-		from
-			core.fact_payment p
-			join core.dim_inventory di 
-				on p.inventory_fk = di.inventory_pk 
-		group by
-			di.title;
+	INSERT INTO report.sales_film
+	(
+		film_title, 
+		amount
+	)
+	SELECT
+		di.title as film_title,
+		sum(p.amount) as amout
+	FROM
+		core.fact_payment p
+	JOIN core.dim_inventory di 
+		ON p.inventory_fk = di.inventory_pk 
+	GROUP BY
+		di.title;
 END;
 $$;
 
-call report.sales_film_calc()
+CALL report.sales_film_calc()
 
 	
